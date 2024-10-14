@@ -3,8 +3,9 @@
 Plugin Name: Email Verification for Contact Form 7
 Description: Fill out the contact form 7 and submit it with an email address that is verified.
 Author: Geek Code Lab
-Version: 2.4
+Version: 2.4.1
 Author URI: https://geekcodelab.com/
+Requires Plugins: contact-form-7
 Text Domain : email-verification-for-contact-form-7
 */
 if (!defined('ABSPATH')) exit;
@@ -17,33 +18,8 @@ if (!defined("EVCF7_PLUGIN_URL"))
     
     define("EVCF7_PLUGIN_URL", plugins_url() . '/' . basename(dirname(__FILE__)));
     
-define("EVCF7_BUILD", '2.4');
+define("EVCF7_BUILD", '2.4.1');
 define("EVCF7_PRO_PLUGIN_URL", 'https://geekcodelab.com/wordpress-plugins/email-verification-for-contact-form-7-pro/');
-
-/**
- * Admin notice
- */
-add_action( 'admin_init', 'evcf7_plugin_load' );
-
-function evcf7_plugin_load(){
-	if ( ! ( is_plugin_active( 'contact-form-7/wp-contact-form-7.php' ) ) ) {
-		add_action( 'admin_notices', 'evcf7_install_contact_form_7_admin_notice' );
-		deactivate_plugins("email-verification-for-contact-form-7/email-verification-for-contact-form-7.php");
-		return;
-	}
-}
-
-function evcf7_install_contact_form_7_admin_notice(){ ?>
-	<div class="error">
-		<p>
-			<?php
-			// translators: %s is the plugin name.
-			echo esc_html( sprintf( __( '%s is enabled but not effective. It requires Contact Form 7 in order to work.', 'email-verification-for-contact-form-7' ), 'Email Verification for Contact Form 7' ) );
-			?>
-		</p>
-	</div>
-	<?php
-}
 
 register_activation_hook( __FILE__, 'evcf7_plugin_activate' );
 function evcf7_plugin_activate() {
@@ -178,7 +154,7 @@ function evcf7_verify_email_ajax() {
 
         $mail = wp_mail($to,html_entity_decode($email_subject),$email_html_decode,$headers);
         if($mail == true) { ?>
-                <p class="evcf7_email_sent"><?php echo nl2br(esc_html($success_otp_msg,'email-verification-for-contact-form-7')); ?></p>
+                <p class="evcf7_email_sent"><?php echo nl2br(esc_html($success_otp_msg)); ?></p>
             <?php
             global $wpdb;
             $db_table_name = $wpdb->prefix . 'evcf7_options';
@@ -194,7 +170,7 @@ function evcf7_verify_email_ajax() {
                 $wpdb->insert($db_table_name,$data);
             }
         }else{ ?>
-                <p class="evcf7_error_sending_mail"><?php echo nl2br(esc_html($error_otp_msg,'email-verification-for-contact-form-7')); ?></p>
+                <p class="evcf7_error_sending_mail"><?php echo nl2br(esc_html($error_otp_msg)); ?></p>
             <?php
         }
 
@@ -206,7 +182,7 @@ function evcf7_verify_email_ajax() {
 // admin scripts
 add_action('admin_enqueue_scripts','evcf7_plugin_admin_scripts');
 function evcf7_plugin_admin_scripts( $hook ) {
-    if($hook == 'contact_page_evcf7-email-verify') {
+    if (is_admin() && strpos($hook, 'evcf7-email-verify') !== false) {
         wp_enqueue_style('evcf7-admin-style', plugins_url() . '/' . basename(dirname(__FILE__)) . '/assets/css/admin-style.css', array( 'wp-color-picker' ), EVCF7_BUILD);
         wp_enqueue_script('evcf7-admin-script', plugins_url() . '/' . basename(dirname(__FILE__)) . '/assets/js/admin-script.js', array( 'jquery','wp-color-picker' ), EVCF7_BUILD);
     }
